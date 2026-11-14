@@ -130,6 +130,8 @@ kbd{font:600 12px var(--body);background:var(--panel);border:1px solid var(--lin
 .grp.locked{opacity:.45}
 /* Bản điện thoại */
 html,body{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+/* chạm nhanh hai lần không phóng to (Safari iOS bỏ qua user-scalable=no) */
+html,body,button,.talk,.ov,.guide{touch-action:manipulation}
 .game,.pad,.hudbtns{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .game.fs{touch-action:none}
 .rotate{display:none;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:3px;background:var(--panel);font-size:13px}
@@ -1918,6 +1920,10 @@ function frame(now){
   stepWx(real);draw();requestAnimationFrame(frame);
 }
 if(window.__HGQ_TEST)window.__HGQ={get:()=>({scene,stageN,P,EN,score,stage,lives,combo,maxCombo,camX,unl,PROPS,PICKS,DARTS}),press:pressBtn,tap:onDirTap,keys,M,startMove,startSuper,advanceTalk,skipTalk,setT:v=>{T=v},spawn,STG,hitPlayer,startStage,startLesson,LESSONS,les:()=>LES,VL:()=>VL,vlOn,CHAPTERS,setSaved:v=>{saved=v}};
+/* điện thoại: chặn phóng to/thu nhỏ ngoài ý muốn khi chụm hai ngón hoặc chạm hai lần */
+['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,ev=>ev.preventDefault(),{passive:false}));
+document.addEventListener('touchmove',ev=>{if(ev.touches.length>1||(ev.scale&&ev.scale!==1))ev.preventDefault()},{passive:false});
+document.addEventListener('dblclick',ev=>ev.preventDefault(),{passive:false});
 const COARSE=!!(window.matchMedia&&matchMedia('(pointer: coarse)').matches);
 function autoFs(){if(!COARSE)return;const land=innerWidth>innerHeight;if(land!==wrapEl.classList.contains('fs'))setFs(land);if(land)window.scrollTo(0,0)}
 window.addEventListener('resize',autoFs);window.addEventListener('orientationchange',()=>setTimeout(autoFs,250));autoFs();
