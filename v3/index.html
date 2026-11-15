@@ -990,6 +990,7 @@ let PT=[], IMP=[], RINGS=[], TXT=[], KJ=[], GH=[], WX=[];
 let stage=null, camX=0, trauma=0, hitstop=0, slowT=0, flashW=0, flashC=null, zoomP=0, zoomX=400, zoomY=300, dimA=0;
 let combo=0, comboT=0, maxCombo=0, chain=[], lives=3, deaths=0, dmgTaken=0, banner=null, hint=null, callout=null, unl={}, toks=[], timeStop=false;
 try{saved=clamp(parseInt(localStorage.getItem('hgq2_stage')||'1',10)||1,1,50);best=parseInt(localStorage.getItem('hgq2_best')||'0',10)||0}catch(e){}
+if(/[?&]mo=1/.test(location.search))saved=50;
 function save(){try{localStorage.setItem('hgq2_stage',String(saved));localStorage.setItem('hgq2_best',String(best))}catch(e){}}
 function ok(req){return req==='base'||!!unl[req]}
 let SEED=1;
