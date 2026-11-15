@@ -242,7 +242,7 @@ const FX=(function(){
   const api={cam:{ox:0,oy:0,z:1},el:null,mode:'off'};
   const MODES=['high','mid','off'],LABEL={high:'Cao',mid:'Vừa',off:'Tắt'};
   const BRIGHT=`varying vec2 vTextureCoord;uniform sampler2D uSampler;uniform float uT;
-void main(){vec4 c=texture2D(uSampler,vTextureCoord);float l=max(c.r,max(c.g,c.b));float k=smoothstep(uT,uT+.3,l);gl_FragColor=vec4(c.rgb*k*k,1.0)*c.a;}`;
+void main(){vec4 c=texture2D(uSampler,vTextureCoord);vec3 col=c.a>0.0?c.rgb/c.a:vec3(0.0);float l=dot(col,vec3(0.299,0.587,0.114));float k=smoothstep(uT,uT+.2,l);gl_FragColor=vec4(col*k*k,1.0)*c.a;}`; /* màu vào đã nhân sẵn alpha của lớp glow: chia lại trước khi so ngưỡng sáng */
   const GRADE=`precision highp float;
 varying vec2 vTextureCoord;uniform sampler2D uSampler;uniform vec4 inputSize;uniform vec4 outputFrame;uniform vec4 inputClamp;
 uniform float uSat,uCon,uVig,uCA,uTime,uGrain,uLow;uniform vec3 uTint;uniform vec4 uW[4];
@@ -277,8 +277,9 @@ void main(){
     offCv=document.createElement('canvas');offCv.width=W*2;offCv.height=H*2;offG=offCv.getContext('2d');
     tex=PIXI.Texture.from(offCv);
     world=new PIXI.Container();world.filterArea=app.screen;app.stage.addChild(world);
-    base=new PIXI.Sprite(tex);glow=new PIXI.Sprite(tex);glow.blendMode=PIXI.BLEND_MODES.ADD;glow.alpha=.75;glow.filterArea=app.screen;
-    bright=new PIXI.Filter(undefined,BRIGHT,{uT:.62});blur=new PIXI.BlurFilter(10,4);bright.resolution=.5;blur.resolution=.5;glow.filters=[bright,blur];
+    base=new PIXI.Sprite(tex);glow=new PIXI.Sprite(tex);glow.blendMode=PIXI.BLEND_MODES.ADD;glow.alpha=.5;glow.filterArea=app.screen;
+    bright=new PIXI.Filter(undefined,BRIGHT,{uT:.78});blur=new PIXI.BlurFilter(10,4);bright.resolution=.5;blur.resolution=.5;glow.filters=[bright,blur];
+    blur.blendMode=PIXI.BLEND_MODES.ADD; /* kết quả của bộ lọc phải cộng sáng lên cảnh; blendMode của sprite bị bỏ qua khi có bộ lọc */
     wfx=new PIXI.Container();lights=new PIXI.Container();sparks=new PIXI.Container();wfx.addChild(lights,sparks);
     world.addChild(base,glow,wfx);
     grade=new PIXI.Filter(undefined,GRADE,{uSat:1.1,uCon:1.08,uVig:.22,uCA:0,uTime:0,uGrain:.03,uLow:0,uTint:new Float32Array([1,1,1]),uW:new Float32Array(16)});
@@ -358,6 +359,7 @@ void main(){
   api.init=function(){let m='high';try{m=localStorage.getItem('hgq2_gfx')||'high'}catch(e){}if(MODES.indexOf(m)<0)m='high';setMode(m)};
   api.cycle=function(){setMode(MODES[(MODES.indexOf(api.mode)+1)%MODES.length])};
   api.label=function(){return LABEL[api.mode]};
+  if(window.__HGQ_TEST)api._dbg=()=>({app,glow,bright,blur,base,world,grade,tex});
   return api;
 })();
 
@@ -2054,7 +2056,7 @@ function frame(now){
   }else{stepFx(real);if(scene==='talk'&&TQ){const l=TQ[TI];if(TS<l[1].length){TS=Math.min(l[1].length,TS+real*48);renderTalk()}}}
   stepWx(real);draw();requestAnimationFrame(frame);
 }
-if(window.__HGQ_TEST)window.__HGQ={get:()=>({scene,stageN,P,EN,score,stage,lives,combo,maxCombo,camX,unl,PROPS,PICKS,DARTS}),press:pressBtn,tap:onDirTap,keys,M,startMove,startSuper,advanceTalk,skipTalk,setT:v=>{T=v},spawn,STG,hitPlayer,startStage,startLesson,LESSONS,les:()=>LES,VL:()=>VL,vlOn,CHAPTERS,setSaved:v=>{saved=v}};
+if(window.__HGQ_TEST)window.__HGQ={fx:FX,get:()=>({scene,stageN,P,EN,score,stage,lives,combo,maxCombo,camX,unl,PROPS,PICKS,DARTS}),press:pressBtn,tap:onDirTap,keys,M,startMove,startSuper,advanceTalk,skipTalk,setT:v=>{T=v},spawn,STG,hitPlayer,startStage,startLesson,LESSONS,les:()=>LES,VL:()=>VL,vlOn,CHAPTERS,setSaved:v=>{saved=v}};
 /* điện thoại: chặn phóng to/thu nhỏ ngoài ý muốn khi chụm hai ngón hoặc chạm hai lần */
 ['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,ev=>ev.preventDefault(),{passive:false}));
 document.addEventListener('touchmove',ev=>{if(ev.touches.length>1||(ev.scale&&ev.scale!==1))ev.preventDefault()},{passive:false});
