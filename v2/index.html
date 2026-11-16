@@ -242,7 +242,7 @@ const FX=(function(){
   const api={cam:{ox:0,oy:0,z:1},el:null,mode:'off'};
   const MODES=['high','mid','off'],LABEL={high:'Cao',mid:'Vừa',off:'Tắt'};
   const BRIGHT=`varying vec2 vTextureCoord;uniform sampler2D uSampler;uniform float uT;
-void main(){vec4 c=texture2D(uSampler,vTextureCoord);vec3 col=c.a>0.0?c.rgb/c.a:vec3(0.0);float l=dot(col,vec3(0.299,0.587,0.114));float k=smoothstep(uT,uT+.2,l);gl_FragColor=vec4(col*k*k,1.0)*c.a;}`; /* màu vào đã nhân sẵn alpha của lớp glow: chia lại trước khi so ngưỡng sáng */
+void main(){vec4 c=texture2D(uSampler,vTextureCoord);vec3 col=c.a>0.0?c.rgb/c.a:vec3(0.0);float l=dot(col,vec3(0.299,0.587,0.114));float k=smoothstep(uT,uT+.05,l);gl_FragColor=vec4(col*k*k,1.0)*c.a;}`; /* màu vào đã nhân sẵn alpha của lớp glow: chia lại trước khi so ngưỡng sáng */
   const GRADE=`precision highp float;
 varying vec2 vTextureCoord;uniform sampler2D uSampler;uniform vec4 inputSize;uniform vec4 outputFrame;uniform vec4 inputClamp;
 uniform float uSat,uCon,uVig,uCA,uTime,uGrain,uLow;uniform vec3 uTint;uniform vec4 uW[4];
@@ -277,8 +277,8 @@ void main(){
     offCv=document.createElement('canvas');offCv.width=W*2;offCv.height=H*2;offG=offCv.getContext('2d');
     tex=PIXI.Texture.from(offCv);
     world=new PIXI.Container();world.filterArea=app.screen;app.stage.addChild(world);
-    base=new PIXI.Sprite(tex);glow=new PIXI.Sprite(tex);glow.blendMode=PIXI.BLEND_MODES.ADD;glow.alpha=.28;glow.filterArea=app.screen;
-    bright=new PIXI.Filter(undefined,BRIGHT,{uT:.84});blur=new PIXI.BlurFilter(10,4);bright.resolution=.5;blur.resolution=.5;glow.filters=[bright,blur];
+    base=new PIXI.Sprite(tex);glow=new PIXI.Sprite(tex);glow.blendMode=PIXI.BLEND_MODES.ADD;glow.alpha=.22;glow.filterArea=app.screen;
+    bright=new PIXI.Filter(undefined,BRIGHT,{uT:.95});blur=new PIXI.BlurFilter(10,4);bright.resolution=.5;blur.resolution=.5;glow.filters=[bright,blur];
     blur.blendMode=PIXI.BLEND_MODES.ADD; /* kết quả của bộ lọc phải cộng sáng lên cảnh; blendMode của sprite bị bỏ qua khi có bộ lọc */
     wfx=new PIXI.Container();lights=new PIXI.Container();sparks=new PIXI.Container();wfx.addChild(lights,sparks);
     world.addChild(base,glow,wfx);
@@ -302,9 +302,8 @@ void main(){
   function emit(o){const max=api.mode==='high'?900:420;if(ACT.length>=max)return;let s=POOL.pop();if(!s){s=new PIXI.Sprite(TX.dot);s.anchor.set(.5);s.blendMode=PIXI.BLEND_MODES.ADD;sparks.addChild(s)}
     s.visible=true;s.tint=hex(o.c);o.s=s;o.t=0;ACT.push(o)}
   /* Hiệu ứng trúng đòn giữ nhỏ và ngắn: chiêu thức phải là thứ nổi bật nhất, không được che dáng người */
-  api.hit=function(x,y,big,col){if(!app)return;const n=big?10:4,sp=big?420:260;
-    for(let i=0;i<n;i++){const a=rnd(0,Math.PI*2),v=rnd(.3,1)*sp;emit({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-80,gr:950,dr:2.6,l:rnd(.22,.5),sz:rnd(.07,.13),c:i%3?col:0xFFF3D0,k:'spark'})}
-    FLASH.push({x,y,r:big?70:40,c:col,a:big?.3:.18,t:0,l:big?.14:.1});if(big)api.shock(x,y,.006)};
+  api.hit=function(x,y,big,col){if(!app||!big)return; /* chỉ đòn nặng mới có vài tia lửa nhỏ; không chớp sáng, không quầng */
+    for(let i=0;i<5;i++){const a=rnd(0,Math.PI*2),v=rnd(.4,1)*340;emit({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-80,gr:950,dr:2.6,l:rnd(.18,.34),sz:rnd(.05,.09),c:col,k:'spark'})}};
   api.shock=function(x,y,str){if(!app)return;WAVES.push({x,y,t:0,l:.55,str});if(WAVES.length>4)WAVES.shift()};
   api.hurt=function(){hurtT=.35};
   api.step=function(dt){
